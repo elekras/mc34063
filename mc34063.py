@@ -5,37 +5,41 @@
 # This program is covered by
 # GNU General Public License, version 3
 #-------------------------------------------------------
-# this program computes the components value
+# This program computes the components value
 # for switching regulator with mc34063
 # in step down, step up and invert mode
 # Prints on  standard output aproximate values using
 # e12 series for resistors and timing capacitor Ct
+# e24 for R1 and R2
 # e6 for Lmin and Cout
 # Rsc is composed of three equal resistors in parallel
 # for increased power
-# Needs python3 and PySimpleGui
+# Uses python3 and PySimpleGui
 #-------------------------------------------------------
 
 import PySimpleGUI as sg
+import datetime
 
+e24=[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,
+     3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1,10.0]
 e12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
 e6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
-version='MC3x063A Calculator - by Fabio Sturman - Ver 0.2'
+version='MC3x063A Calculator - by Fabio Sturman - Ver 0.3'
 
 GREEN='#00ff00'
 RED='#ff0000'
 
-# default values
+# default values for in parameters
 mode='StepDown'
-vsat=0.2
+vsat=1.0
 vf=0.4
 vin=12.0
-vout=5.0
-iout=1.0
-fmin=50000.0
+vout=5.2
+iout=0.5
+fmin=33000.0
 vripple=0.05
 
-# values to compute
+# values to compute for out
 ct=1e-9
 rsc=0.1
 lmin=1e-6
@@ -43,65 +47,80 @@ cout=1e-6
 r1=1.0
 r2=1.0
 
+# aux values for out 
 ton=0
 toff=0
 tonontoff=0
 tonplustoff=0
 
+# text color
+# GREEN= ok
+# RED= error in input data
 rescolor=GREEN
 
+# searh for best value in e6 or e12
 # c=value s=series (e6 or e12)
 def matchval(c,s):
-    m=6
-    if s==e12:
+    if s==e24:
+        m=24
+    elif s==e12:
         m=12
-    elif s==e6:
+    else:
         m=6
     n=1
     while c<1:
         c=c*10
         n=n/10
-    while c>10:
+    while c>=10:
         c=c/10
         n=n*10
     err=[]
-    for i in range(m+1):
+    for i in range(m):
         err.append((c-s[i])/s[i])
     mm=1
     idx=0
-    for i in range(m+1):
+    for i in range(m):
         if abs(err[i])<mm:
-            mm=err[i]
+            mm=abs(err[i])
             idx=i
-            # standard_value, error_percent, index_in_ex
+            # standard_value, error_percent, index_in_e6-12
     return int((s[idx]*n)*1000)/1000, int((err[idx]*100)*10)/10, idx
 
 # r2=alfa*r1
 # r1 in e12
-# find best r2 in e12
-def bestres(alfa):
-    # val: r
+# find best r2 in exx
+def bestres(alfa,s):
+    if s==e24:
+        m=24
+    elif s==e12:
+        m=12
+    else:
+        m=6
     val=[]
-    for i in range(12):
-        r1=e12[i]
+    for i in range(m):
+        r1=s[i]
         r2=alfa*r1
-        t=matchval(r2,e12)
+        t=matchval(r2,s)
         val.append([r1,t[0],t[1],t[2]])
     e=100
-    for i in range(12):
-        if val[i][2]<e:
-            e=val[i][2]
-            idx=val[i][3]
+    for i in range(m):
+        if abs(val[i][2])<e:
+            e=abs(val[i][2])
+            idx=i
+    #print(val)
     return val[idx]
 
 # prints values on standard out
 def printc():
     print('================================================')
     print(version)
+    # time stamp
+    print(datetime.datetime.now())
     print('Mode=',mode)
     global ct, rsc, vin, vout, vripple, lmin, cout
     print('Vin=',vin,'V')
     print('Vout=',vout,'V')
+    print('Iout=',iout,'A')
     print('Vripple=',vripple*1000,'mV')
     print('Vf=',vf,'V')
     print('Vsat=',vsat,'V')
@@ -109,7 +128,7 @@ def printc():
     print('Ct=',t[0],'pF (',-1*t[1],'%)')
     t=matchval(rsc*3,e12)
     print('Rsc=3 //',t[0],'Ohm (',-1*t[1],'%)')
-    t=bestres(abs(vout)/1.25-1.0)
+    t=bestres(abs(vout)/1.25-1.0,e24)
     print('R1=',t[0],'kOhm  R2=',t[1],'kOhm (',-1*t[2],'%)')
     t=matchval(lmin/1e-6,e6)
     print('Lmin=',t[0],'uH (',-1*t[1],'%)')
@@ -273,6 +292,7 @@ while True:
     # convert from strings to fp
     if flag:
         rescolor=GREEN
+        vsat=float(values[0])
         vf=float(values[1])
         vin=float(values[2])
         vout=float(values[3])
