@@ -20,7 +20,7 @@ import PySimpleGUI as sg
 
 e12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
 e6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
-version='MC3x063A Calculator - by Fabio Sturman - Ver 0.1'
+version='MC3x063A Calculator - by Fabio Sturman - Ver 0.2'
 
 GREEN='#00ff00'
 RED='#ff0000'
@@ -94,7 +94,7 @@ def bestres(alfa):
             idx=val[i][3]
     return val[idx]
 
-# prints valus on standard out
+# prints values on standard out
 def printc():
     print('================================================')
     print(version)
@@ -116,6 +116,7 @@ def printc():
     t=matchval(cout/1e-6,e6)
     print('Cout=',t[0],'uF (',-1*t[1],'%)')
 
+# compute r1, r2, cout, lmin, rsc, ipk, ct, ton, toff
 def mccompute(mode):
     global r1, r2, cout, lmin, rsc, ipk, ct, ton, toff
     global tonplustoff, tonontoff, vripple
@@ -177,21 +178,27 @@ def mcdisplay():
     r2sg(r2,text_color=rescolor)
     modesg(mode)
 
+# converts l to string in uH
 def ltouh(l):
     return str(int(l/1e-6))
 
+# converts c to string in pF
 def ctopf(c):
     return str(int(c/1e-12))
 
+# converts c to string in nF
 def ctonf(c):
     return str(int(c/1e-9))
 
+# converts c to string in uF
 def ctouf(c):
     return str(int(c/1e-6))
 
+# round to 1/1000
 def rto1000(r):
     return str( int(r*1000) / 1000 )
 
+# test float value
 def is_float(v):
     try:
         f=float(v)
@@ -201,8 +208,10 @@ def is_float(v):
 
 # start program
 
+# compute out values from in default values
 mccompute(mode)
 
+# create texts
 ctsg=  sg.Text('',font=("Courier", 12),text_color=rescolor)
 rscsg= sg.Text('',font=("Courier", 12),text_color=rescolor)
 lminsg=sg.Text('',font=("Courier", 12),text_color=rescolor)
@@ -211,6 +220,7 @@ r1sg=  sg.Text('',font=("Courier", 12),text_color=rescolor)
 r2sg=  sg.Text('',font=("Courier", 12),text_color=rescolor)
 modesg=sg.Text('',font=("Courier", 12))
 
+# create inputs
 vsatsg=   sg.InputText(str(vsat),size=(10,10),font=("Courier", 12))
 vfsg=     sg.InputText(str(vf),size=(10,10),font=("Courier", 12))
 vinsb=    sg.InputText(str(vin),size=(10,10),font=("Courier", 12))
@@ -219,6 +229,7 @@ ioutsg=   sg.InputText(str(iout),size=(10,10),font=("Courier", 12))
 fminsg=   sg.InputText(str(fmin),size=(10,10),font=("Courier", 12))
 vripplesg=sg.InputText(str(vripple),size=(10,10),font=("Courier", 12))
 
+# lay out the window
 layout = \
 [
    [sg.Text('Vsat_switch(V): ',font=("Courier", 12)),vsatsg,    sg.Text('Ct(pF)=  ',font=("Courier", 12)),ctsg],
@@ -229,18 +240,19 @@ layout = \
    [sg.Text('fmin(Hz):       ',font=("Courier", 12)),fminsg,    sg.Text('R2(Ohm)=  ',font=("Courier", 12)),r2sg],
    [sg.Text('Vripple(V):     ',font=("Courier", 12)),vripplesg, sg.Button('Mode'), modesg],
 
-   [sg.Button('Ok'), sg.Button('Cancel')]
+   [sg.Button('Calculate'), sg.Button('Exit')]
 ]
 
-# Create the Window
+# create the Window
 window = sg.Window(version, layout,finalize=True)
 
+# display computed values
 mcdisplay()
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
     event, values = window.read()
-    if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+    if event == sg.WIN_CLOSED or event == 'Exit': # if user closes window or clicks cancel
         break
     elif event=='Mode':
         if mode=='VoltageInverting':
@@ -250,7 +262,7 @@ while True:
         else:
             mode='VoltageInverting'
             
-    # test for foating inputs
+    # test for floating point inputs
     fl=[]
     flag=True
     for i in range(7):
@@ -258,6 +270,7 @@ while True:
     for i in range(7):
         flag=flag and fl[i]
 
+    # convert from strings to fp
     if flag:
         rescolor=GREEN
         vf=float(values[1])
@@ -273,6 +286,7 @@ while True:
             rescolor=RED
     else:
         rescolor=RED
+    # display out data
     mcdisplay()
 
 window.close()
