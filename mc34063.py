@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
-#-------------------------------------------------------
-# mc34063.py
-# by Fabio Sturman fabio.sturman@gmail.com (c) 2023
-# This program is covered by
-# GNU General Public License, version 3
-#-------------------------------------------------------
-# This program computes the components value
-# for switching regulator with mc34063
-# in step down, step up and invert mode
-# Prints on  standard output aproximate values using
-# e12 series for resistors and timing capacitor Ct
-# e24 for R1 and R2
-# e6 for Lmin and Cout
-# Rsc is composed of three equal resistors in parallel
-# for increased power
-# Uses python3 and PySimpleGui
-#-------------------------------------------------------
+'''
+This program computes the components value
+for switching regulator with mc34063
+in step down, step up and invert mode.
+It also prints on standard output aproximate values using
+e12 series for resistors and timing capacitor Ct
+e24 for R1 and R2
+e6 for Lmin and Cout
+Rsc is composed of three equal resistors in parallel
+for increased power
+Uses python3 and PySimpleGui
 
-import PySimpleGUI as sg
+Fabio Sturman fabio.sturman@gmail.com (c) 2023
+This program is covered by
+GNU General Public License, version 3
+
+'''
 import datetime
+import base64
+import PySimpleGUI as sg
+import mc34063img as im
 
 e24=[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,
      3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1,10.0]
 e12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
 e6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
-version='MC3x063A Calculator - by Fabio Sturman - Ver 0.3'
+
+VERSION= 'MC34063A Calculator - by Fabio Sturman - Ver 0.4'
+VERSION1='(c) fabio.sturman@gmail.com - 2023'
+GNU3=    'GNU General Public License, version 3'
 
 GREEN='#00ff00'
 RED='#ff0000'
@@ -47,7 +51,7 @@ cout=1e-6
 r1=1.0
 r2=1.0
 
-# aux values for out 
+# aux values for out
 ton=0
 toff=0
 tonontoff=0
@@ -58,9 +62,16 @@ tonplustoff=0
 # RED= error in input data
 rescolor=GREEN
 
-# searh for best value in e6 or e12
-# c=value s=series (e6 or e12)
 def matchval(c,s):
+    '''searches for best value of c in s
+    input:
+      c= value to match
+      s= series to use (e6|e12|e24)
+    output:
+      best value found,
+      error in %,
+      index in s'''
+
     if s==e24:
         m=24
     elif s==e12:
@@ -75,21 +86,27 @@ def matchval(c,s):
         c=c/10
         n=n*10
     err=[]
-    for i in range(m):
+    for i in range(m+1):
         err.append((c-s[i])/s[i])
     mm=1
     idx=0
-    for i in range(m):
+    for i in range(m+1):
         if abs(err[i])<mm:
             mm=abs(err[i])
             idx=i
-            # standard_value, error_percent, index_in_e6-12
+            # best value found, error in %, index s
     return int((s[idx]*n)*1000)/1000, int((err[idx]*100)*10)/10, idx
 
-# r2=alfa*r1
-# r1 in e12
-# find best r2 in exx
 def bestres(alfa,s):
+    '''search for best value of r2(=alfa*r1) and r1 in s
+    foreach value of r1 in e compute r2 and search for best value
+    of r2 in s
+    input:
+      alfa=r2/r1
+      s= series to use (e6|e12|e24)
+    out:
+      (r1, r2, error in %, index)'''
+
     if s==e24:
         m=24
     elif s==e12:
@@ -110,10 +127,11 @@ def bestres(alfa,s):
     #print(val)
     return val[idx]
 
-# prints values on standard out
 def printc():
+    ''' print all data on standad output'''
+    global mode
     print('================================================')
-    print(version)
+    print(VERSION)
     # time stamp
     print(datetime.datetime.now())
     print('Mode=',mode)
@@ -133,16 +151,16 @@ def printc():
     t=matchval(lmin/1e-6,e6)
     print('Lmin=',t[0],'uH (',-1*t[1],'%)')
     t=matchval(cout/1e-6,e6)
-    print('Cout=',t[0],'uF (',-1*t[1],'%)')
+    print('Co=',t[0],'uF (',-1*t[1],'%)')
 
-# compute r1, r2, cout, lmin, rsc, ipk, ct, ton, toff
 def mccompute(mode):
-    global r1, r2, cout, lmin, rsc, ipk, ct, ton, toff
+    '''compute r1, r2, cout, lmin, rsc, ipk, ct, ton, toff'''
+    global r1, r2, cout, lmin, rsc, ct, ton, toff
     global tonplustoff, tonontoff, vripple
     global vout, vf, vin, vsat, fmin, vout
-    if iout<=0 or vripple<=0 or fmin <10000 or vsat<=0 or vf<=0:
+    if iout<=0 or vripple<=0 or fmin <24000 or fmin>42000 or vsat<=0 or vf<=0:
         return False
-    if mode=='VoltageInverting':
+    if mode=='Inverting':
         if vout>=0 or vin<=0 :
             return False
         tonontoff=(abs(vout)+vf)/(vin-vsat-vout)
@@ -186,41 +204,38 @@ def mccompute(mode):
         r2=(abs(vout)/1.25-1.0)*r1
     printc()
     return True
-        
+
 def mcdisplay():
+    '''refres displayed data'''
     global ct, rsc, lmin, cout, r1, r2, mode
-    ctsg(ctopf(ct),text_color=rescolor)
+    ctsg(topico(ct),text_color=rescolor)
     rscsg(rto1000(rsc),text_color=rescolor)
-    lminsg(ltouh(lmin),text_color=rescolor)
-    coutsg(ctouf(cout),text_color=rescolor)
+    lminsg(tomicro(lmin),text_color=rescolor)
+    coutsg(tomicro(cout),text_color=rescolor)
     r1sg(r1,text_color=rescolor)
     r2sg(r2,text_color=rescolor)
     modesg(mode)
 
-# converts l to string in uH
-def ltouh(l):
+def tomicro(l):
+    '''convert to u(micro)'''
     return str(int(l/1e-6))
 
-# converts c to string in pF
-def ctopf(c):
+def topico(c):
+    '''convert to p(pico)'''
     return str(int(c/1e-12))
 
-# converts c to string in nF
-def ctonf(c):
+def tonano(c):
+    '''convert to n(nano)'''
     return str(int(c/1e-9))
 
-# converts c to string in uF
-def ctouf(c):
-    return str(int(c/1e-6))
-
-# round to 1/1000
 def rto1000(r):
+    '''round to 1/1000'''
     return str( int(r*1000) / 1000 )
 
-# test float value
 def is_float(v):
+    '''test if float'''
     try:
-        f=float(v)
+        float(v)
     except ValueError:
         return False
     return True
@@ -229,6 +244,11 @@ def is_float(v):
 
 # compute out values from in default values
 mccompute(mode)
+
+# read base64 encoded png images
+ImgStepDown= base64.b64decode(im.StepDown)
+ImgStepUp= base64.b64decode(im.StepUp)
+ImgInverting= base64.b64decode(im.Inverting)
 
 # create texts
 ctsg=  sg.Text('',font=("Courier", 12),text_color=rescolor)
@@ -248,22 +268,34 @@ ioutsg=   sg.InputText(str(iout),size=(10,10),font=("Courier", 12))
 fminsg=   sg.InputText(str(fmin),size=(10,10),font=("Courier", 12))
 vripplesg=sg.InputText(str(vripple),size=(10,10),font=("Courier", 12))
 
+# create image
+imagesg=  sg.Image(ImgStepDown)
+
 # lay out the window
 layout = \
 [
-   [sg.Text('Vsat_switch(V): ',font=("Courier", 12)),vsatsg,    sg.Text('Ct(pF)=  ',font=("Courier", 12)),ctsg],
-   [sg.Text('VF_rectifier(V):',font=("Courier", 12)),vfsg,      sg.Text('Rsc(Ohm)=',font=("Courier", 12)),rscsg],
-   [sg.Text('Vin(V):         ',font=("Courier", 12)),vinsb,     sg.Text('Lmin(uH)=',font=("Courier", 12)),lminsg],
-   [sg.Text('Vout(V):        ',font=("Courier", 12)),voutsg,    sg.Text('Cout(uF)=',font=("Courier", 12)),coutsg],
-   [sg.Text('Iout(A):        ',font=("Courier", 12)),ioutsg,    sg.Text('R1(Ohm)=  ',font=("Courier", 12)),r1sg],
-   [sg.Text('fmin(Hz):       ',font=("Courier", 12)),fminsg,    sg.Text('R2(Ohm)=  ',font=("Courier", 12)),r2sg],
-   [sg.Text('Vripple(V):     ',font=("Courier", 12)),vripplesg, sg.Button('Mode'), modesg],
+   [sg.Text('Vsat_switch(V): ',font=("Courier", 12)),vsatsg,  \
+    sg.Text('Ct(pF)=  ',font=("Courier", 12)),ctsg],
+   [sg.Text('VF_rectifier(V):',font=("Courier", 12)),vfsg, \
+    sg.Text('Rsc(Ohm)=',font=("Courier", 12)),rscsg],
+   [sg.Text('Vin(V):         ',font=("Courier", 12)),vinsb, \
+    sg.Text('Lmin(uH)=',font=("Courier", 12)),lminsg],
+   [sg.Text('Vout(V):        ',font=("Courier", 12)),voutsg, \
+    sg.Text('Co(uF)=  ',font=("Courier", 12)),coutsg],
+   [sg.Text('Iout(A):        ',font=("Courier", 12)),ioutsg, \
+    sg.Text('R1(Ohm)= ',font=("Courier", 12)),r1sg],
+   [sg.Text('fmin(Hz):       ',font=("Courier", 12)),fminsg, \
+    sg.Text('R2(Ohm)=  ',font=("Courier", 12)),r2sg],
+   [sg.Text('Vripple(V):     ',font=("Courier", 12)),vripplesg, \
+    sg.Button('Mode'), modesg],
 
-   [sg.Button('Calculate'), sg.Button('Exit')]
+   [sg.Button('About'),sg.Button('Calculate'), sg.Button('Exit')],
+   [imagesg]
 ]
 
 # create the Window
-window = sg.Window(version, layout,finalize=True)
+window = sg.Window(VERSION, layout,finalize=True)
+window.bind("<Return>", "_Enter")
 
 # display computed values
 mcdisplay()
@@ -274,13 +306,18 @@ while True:
     if event == sg.WIN_CLOSED or event == 'Exit': # if user closes window or clicks cancel
         break
     elif event=='Mode':
-        if mode=='VoltageInverting':
+        if mode=='Inverting':
             mode='StepDown'
+            imagesg(ImgStepDown)
         elif mode=='StepDown':
             mode='StepUp'
+            imagesg(ImgStepUp)
         else:
-            mode='VoltageInverting'
-            
+            mode='Inverting'
+            imagesg(ImgInverting)
+    elif event=='About':
+        sg.popup(VERSION+'\n'+VERSION1+'\n'+GNU3, title='MC34063')
+
     # test for floating point inputs
     fl=[]
     flag=True
@@ -299,7 +336,7 @@ while True:
         iout=float(values[4])
         fmin=float(values[5])
         vripple=float(values[6])
-    
+
         if mccompute(mode):
             pass
         else:
