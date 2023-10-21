@@ -11,7 +11,7 @@ Rsc is composed of three equal resistors in parallel
 for increased power
 Uses python3 and PySimpleGui
 
-Fabio Sturman fabio.sturman@gmail.com (c) 2023
+(c) Fabio Sturman fabio.sturman@gmail.com - 2023
 This program is covered by
 GNU General Public License, version 3
 
@@ -26,19 +26,19 @@ e24=[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,
 e12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
 e6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
 
-VERSION= 'MC34063A Calculator - by Fabio Sturman - Ver 0.5'
-VERSION1='(c) fabio.sturman@gmail.com - 2023'
+VERSION= 'MC34063  Calculator - by Fabio Sturman - Ver 0.6'
+VERSION1='(c) Fabio Sturman fabio.sturman@gmail.com - 2023'
 GNU3=    'GNU General Public License, version 3'
 
-GREEN='#000000'
-RED='#ff0000'
+COLOR_OK='#000000'
+COLOR_ERR='#ff0000'
 
 # default values for in parameters
 mode='StepDown'
 vsat=1.0
 vf=0.4
 vin=12.0
-vout=5.2
+vout=5.0
 iout=0.5
 fmin=33000.0
 vripple=0.05
@@ -60,7 +60,7 @@ tonplustoff=0
 # text color
 # GREEN= ok
 # RED= error in input data
-rescolor=GREEN
+rescolor=COLOR_OK
 
 def matchval(c,s):
     '''searches for best value of c in s
@@ -128,20 +128,20 @@ def bestres(alfa,s):
     return val[idx]
 
 def printc():
-    ''' print all data on standad output'''
-    global mode
+    ''' print all data on standard output'''
     print('================================================')
     print(VERSION)
-    # time stamp
     print(datetime.datetime.now())
     print('Mode=',mode)
-    global ct, rsc, vin, vout, vripple, lmin, cout
+    print('------------------------------------------------')
     print('Vin=',vin,'V')
     print('Vout=',vout,'V')
     print('Iout=',iout,'A')
     print('Vripple=',vripple*1000,'mV')
     print('Vf=',vf,'V')
     print('Vsat=',vsat,'V')
+    print('fmin=',fmin,'Hz')
+    print('------------------------------------------------')
     t=matchval(ct/1e-12,e12)
     print('Ct=',t[0],'pF (',-1*t[1],'%)')
     t=matchval(rsc*3,e12)
@@ -156,8 +156,6 @@ def printc():
 def mccompute(mode):
     '''compute r1, r2, cout, lmin, rsc, ipk, ct, ton, toff'''
     global r1, r2, cout, lmin, rsc, ct, ton, toff
-    global tonplustoff, tonontoff, vripple
-    global vout, vf, vin, vsat, fmin, vout
     if iout<=0 or vripple<=0 or fmin <24000 or fmin>42000 or vsat<=0 or vf<=0:
         return False
     if mode=='Inverting':
@@ -206,8 +204,7 @@ def mccompute(mode):
     return True
 
 def mcdisplay():
-    '''refres displayed data'''
-    global ct, rsc, lmin, cout, r1, r2, mode
+    '''refresh displayed data'''
     ctsg(topico(ct),text_color=rescolor)
     rscsg(rto1000(rsc),text_color=rescolor)
     lminsg(tomicro(lmin),text_color=rescolor)
@@ -215,7 +212,7 @@ def mcdisplay():
     r1sg(r1,text_color=rescolor)
     r2sg(r2,text_color=rescolor)
     modesg(mode)
-    if rescolor==RED:
+    if rescolor==COLOR_ERR:
         st('Error in data')
     else:
         st('Press <ENTER> or click on COMPUTE')
@@ -244,11 +241,14 @@ def is_float(v):
         return False
     return True
 
-# start program
+# main program
 
 # compute out values from in default values
 mccompute(mode)
+
+# select theme
 sg.theme('SystemDefault')
+
 # read base64 encoded png images
 ImgStepDown= base64.b64decode(im.StepDown)
 ImgStepUp= base64.b64decode(im.StepUp)
@@ -336,7 +336,6 @@ while True:
 
     # convert from strings to fp
     if flag:
-        rescolor=GREEN
         vsat=float(values[0])
         vf=float(values[1])
         vin=float(values[2])
@@ -346,11 +345,12 @@ while True:
         vripple=float(values[6])
 
         if mccompute(mode):
-            pass
+            rescolor=COLOR_OK
         else:
-            rescolor=RED
+            rescolor=COLOR_ERR
     else:
-        rescolor=RED
+        rescolor=COLOR_ERR
+        
     # display out data
     mcdisplay()
 
