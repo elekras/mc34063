@@ -26,11 +26,11 @@ e24=[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,
 e12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
 e6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
 
-VERSION= 'MC34063A Calculator - by Fabio Sturman - Ver 0.4'
+VERSION= 'MC34063A Calculator - by Fabio Sturman - Ver 0.5'
 VERSION1='(c) fabio.sturman@gmail.com - 2023'
 GNU3=    'GNU General Public License, version 3'
 
-GREEN='#00ff00'
+GREEN='#000000'
 RED='#ff0000'
 
 # default values for in parameters
@@ -99,7 +99,7 @@ def matchval(c,s):
 
 def bestres(alfa,s):
     '''search for best value of r2(=alfa*r1) and r1 in s
-    foreach value of r1 in e compute r2 and search for best value
+    Foreach value of r1 in s compute r2 and search for best value
     of r2 in s
     input:
       alfa=r2/r1
@@ -215,6 +215,10 @@ def mcdisplay():
     r1sg(r1,text_color=rescolor)
     r2sg(r2,text_color=rescolor)
     modesg(mode)
+    if rescolor==RED:
+        st('Error in data')
+    else:
+        st('Press <ENTER> or click on COMPUTE')
 
 def tomicro(l):
     '''convert to u(micro)'''
@@ -244,7 +248,7 @@ def is_float(v):
 
 # compute out values from in default values
 mccompute(mode)
-
+sg.theme('SystemDefault')
 # read base64 encoded png images
 ImgStepDown= base64.b64decode(im.StepDown)
 ImgStepUp= base64.b64decode(im.StepUp)
@@ -270,6 +274,7 @@ vripplesg=sg.InputText(str(vripple),size=(10,10),font=("Courier", 12))
 
 # create image
 imagesg=  sg.Image(ImgStepDown)
+st=sg.StatusBar('                                                      ')
 
 # lay out the window
 layout = \
@@ -289,12 +294,15 @@ layout = \
    [sg.Text('Vripple(V):     ',font=("Courier", 12)),vripplesg, \
     sg.Button('Mode'), modesg],
 
-   [sg.Button('About'),sg.Button('Calculate'), sg.Button('Exit')],
-   [imagesg]
+   [sg.Button('About'),sg.Button('Compute'), sg.Button('Exit')],
+   [imagesg],
+   [st]
+
 ]
 
 # create the Window
 window = sg.Window(VERSION, layout,finalize=True)
+
 window.bind("<Return>", "_Enter")
 
 # display computed values
