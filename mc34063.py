@@ -26,7 +26,7 @@ e24=[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,
 e12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
 e6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
 
-VERSION= 'MC34063  Calculator - by Fabio Sturman - Ver 0.6'
+VERSION= 'MC34063  Calculator - by Fabio Sturman - Ver 0.7'
 VERSION1='(c) Fabio Sturman fabio.sturman@gmail.com - 2023'
 GNU3=    'GNU General Public License, version 3'
 
@@ -61,7 +61,7 @@ tonplustoff=0
 # GREEN= ok
 # RED= error in input data
 rescolor=COLOR_OK
-
+ffont='Andale Mono'
 def matchval(c,s):
     '''searches for best value of c in s
     input:
@@ -124,7 +124,6 @@ def bestres(alfa,s):
         if abs(val[i][2])<e:
             e=abs(val[i][2])
             idx=i
-    #print(val)
     return val[idx]
 
 def printc():
@@ -255,22 +254,22 @@ ImgStepUp= base64.b64decode(im.StepUp)
 ImgInverting= base64.b64decode(im.Inverting)
 
 # create texts
-ctsg=  sg.Text('',font=("Courier", 12),text_color=rescolor)
-rscsg= sg.Text('',font=("Courier", 12),text_color=rescolor)
-lminsg=sg.Text('',font=("Courier", 12),text_color=rescolor)
-coutsg=sg.Text('',font=("Courier", 12),text_color=rescolor)
-r1sg=  sg.Text('',font=("Courier", 12),text_color=rescolor)
-r2sg=  sg.Text('',font=("Courier", 12),text_color=rescolor)
-modesg=sg.Text('',font=("Courier", 12))
+ctsg=  sg.Text('' ,text_color=rescolor,size=(15,1) )
+rscsg= sg.Text('' ,text_color=rescolor,size=(15,1) )
+coutsg=sg.Text('' ,text_color=rescolor,size=(15,1) )
+r1sg=  sg.Text('' ,text_color=rescolor,size=(15,1) )
+r2sg=  sg.Text('' ,text_color=rescolor,size=(15,1) )
+lminsg=  sg.Text('' ,text_color=rescolor,size=(15,1) )
+modesg=sg.Text('' )
 
 # create inputs
-vsatsg=   sg.InputText(str(vsat),size=(10,10),font=("Courier", 12))
-vfsg=     sg.InputText(str(vf),size=(10,10),font=("Courier", 12))
-vinsb=    sg.InputText(str(vin),size=(10,10),font=("Courier", 12))
-voutsg=   sg.InputText(str(vout),size=(10,10),font=("Courier", 12))
-ioutsg=   sg.InputText(str(iout),size=(10,10),font=("Courier", 12))
-fminsg=   sg.InputText(str(fmin),size=(10,10),font=("Courier", 12))
-vripplesg=sg.InputText(str(vripple),size=(10,10),font=("Courier", 12))
+vsatsg=   sg.InputText(str(vsat),size=(10,1) )
+vfsg=     sg.InputText(str(vf),size=(10,1) )
+vinsb=    sg.InputText(str(vin),size=(10,1) )
+voutsg=   sg.InputText(str(vout),size=(10,1) )
+ioutsg=   sg.InputText(str(iout),size=(10,1) )
+fminsg=   sg.InputText(str(fmin),size=(10,1) )
+vripplesg=sg.InputText(str(vripple),size=(10,1) )
 
 # create image
 imagesg=  sg.Image(ImgStepDown)
@@ -279,39 +278,40 @@ st=sg.StatusBar('                                                      ')
 # lay out the window
 layout = \
 [
-   [sg.Text('Vsat_switch(V): ',font=("Courier", 12)),vsatsg,  \
-    sg.Text('Ct(pF)=  ',font=("Courier", 12)),ctsg],
-   [sg.Text('VF_rectifier(V):',font=("Courier", 12)),vfsg, \
-    sg.Text('Rsc(Ohm)=',font=("Courier", 12)),rscsg],
-   [sg.Text('Vin(V):         ',font=("Courier", 12)),vinsb, \
-    sg.Text('Lmin(uH)=',font=("Courier", 12)),lminsg],
-   [sg.Text('Vout(V):        ',font=("Courier", 12)),voutsg, \
-    sg.Text('Co(uF)=  ',font=("Courier", 12)),coutsg],
-   [sg.Text('Iout(A):        ',font=("Courier", 12)),ioutsg, \
-    sg.Text('R1(Ohm)= ',font=("Courier", 12)),r1sg],
-   [sg.Text('fmin(Hz):       ',font=("Courier", 12)),fminsg, \
-    sg.Text('R2(Ohm)=  ',font=("Courier", 12)),r2sg],
-   [sg.Text('Vripple(V):     ',font=("Courier", 12)),vripplesg, \
+   [sg.Text('Vsat_switch(V):',size=(12,1) ),vsatsg,  \
+    sg.Text('Ct(pF)=',size=(8,1) ),ctsg],
+   [sg.Text('VF_rectifier(V):',size=(12,1) ),vfsg, \
+    sg.Text('Rsc(Ohm)=',size=(8,1) ),rscsg],
+   [sg.Text('Vin(V):' ,size=(12,1)),vinsb, \
+    sg.Text('Lmin(uH)=',size=(8,1) ),lminsg],
+   [sg.Text('Vout(V):',size=(12,1) ),voutsg, \
+    sg.Text('Co(uF)=',size=(8,1) ),coutsg],
+   [sg.Text('Iout(A):',size=(12,1) ),ioutsg, \
+    sg.Text('R1(Ohm)=',size=(8,1) ),r1sg],
+   [sg.Text('fmin(Hz):',size=(12,1) ),fminsg, \
+    sg.Text('R2(Ohm)=',size=(8,1) ),r2sg],
+   [sg.Text('Vripple(V):',size=(12,1) ),vripplesg, \
     sg.Button('Mode'), modesg],
 
-   [sg.Button('About'),sg.Button('Compute'), sg.Button('Exit')],
+   [sg.Button('Compute'),sg.Button('About'), sg.Button('Exit')],
    [imagesg],
    [st]
 
 ]
 
 # create the Window
-window = sg.Window(VERSION, layout,finalize=True)
+window = sg.Window(VERSION, layout,finalize=True,font=('Ubuntu',10))
 
 window.bind("<Return>", "_Enter")
-
+window.bind('<Escape>','_Escape')
 # display computed values
 mcdisplay()
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
     event, values = window.read()
-    if event == sg.WIN_CLOSED or event == 'Exit': # if user closes window or clicks cancel
+    # if user closes window or clicks cancel or presses Esc
+    if event == sg.WIN_CLOSED or event == 'Exit' or event=='_Escape':
         break
     elif event=='Mode':
         if mode=='Inverting':
@@ -324,7 +324,7 @@ while True:
             mode='Inverting'
             imagesg(ImgInverting)
     elif event=='About':
-        sg.popup(VERSION+'\n'+VERSION1+'\n'+GNU3, title='MC34063')
+        sg.popup(VERSION+'\n'+VERSION1+'\n'+GNU3, title='MC34063',font=('Ubuntu',10))
 
     # test for floating point inputs
     fl=[]
@@ -355,3 +355,4 @@ while True:
     mcdisplay()
 
 window.close()
+
