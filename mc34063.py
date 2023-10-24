@@ -21,17 +21,23 @@ import base64
 import PySimpleGUI as sg
 import mc34063img as im
 
-e24=[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,
+E24=[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,
      3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1,10.0]
-e12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
-e6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
+E12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
+E6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
 
-VERSION= 'MC34063  Calculator - by Fabio Sturman - Ver 0.7'
+VERSION= 'MC34063  Calculator - by Fabio Sturman - Ver 0.8'
 VERSION1='(c) Fabio Sturman fabio.sturman@gmail.com - 2023'
 GNU3=    'GNU General Public License, version 3'
 
+# text color
 COLOR_OK='#000000'
 COLOR_ERR='#ff0000'
+MFONT='Ubuntu'
+PFONT='Ubuntu'
+MSIZE=14
+PSIZE=14
+THEME='SystemDefault'
 
 # default values for in parameters
 mode='StepDown'
@@ -57,11 +63,8 @@ toff=0
 tonontoff=0
 tonplustoff=0
 
-# text color
-# GREEN= ok
-# RED= error in input data
 rescolor=COLOR_OK
-ffont='Andale Mono'
+
 def matchval(c,s):
     '''searches for best value of c in s
     input:
@@ -72,9 +75,9 @@ def matchval(c,s):
       error in %,
       index in s'''
 
-    if s==e24:
+    if s==E24:
         m=24
-    elif s==e12:
+    elif s==E12:
         m=12
     else:
         m=6
@@ -107,9 +110,9 @@ def bestres(alfa,s):
     out:
       (r1, r2, error in %, index)'''
 
-    if s==e24:
+    if s==E24:
         m=24
-    elif s==e12:
+    elif s==E12:
         m=12
     else:
         m=6
@@ -141,15 +144,15 @@ def printc():
     print('Vsat=',vsat,'V')
     print('fmin=',fmin,'Hz')
     print('------------------------------------------------')
-    t=matchval(ct/1e-12,e12)
+    t=matchval(ct/1e-12,E12)
     print('Ct=',t[0],'pF (',-1*t[1],'%)')
-    t=matchval(rsc*3,e12)
+    t=matchval(rsc*3,E12)
     print('Rsc=3 //',t[0],'Ohm (',-1*t[1],'%)')
-    t=bestres(abs(vout)/1.25-1.0,e24)
+    t=bestres(abs(vout)/1.25-1.0,E24)
     print('R1=',t[0],'kOhm  R2=',t[1],'kOhm (',-1*t[2],'%)')
-    t=matchval(lmin/1e-6,e6)
+    t=matchval(lmin/1e-6,E6)
     print('Lmin=',t[0],'uH (',-1*t[1],'%)')
-    t=matchval(cout/1e-6,e6)
+    t=matchval(cout/1e-6,E6)
     print('Co=',t[0],'uF (',-1*t[1],'%)')
 
 def mccompute(mode):
@@ -204,17 +207,17 @@ def mccompute(mode):
 
 def mcdisplay():
     '''refresh displayed data'''
-    ctsg(topico(ct),text_color=rescolor)
-    rscsg(rto1000(rsc),text_color=rescolor)
-    lminsg(tomicro(lmin),text_color=rescolor)
-    coutsg(tomicro(cout),text_color=rescolor)
-    r1sg(r1,text_color=rescolor)
-    r2sg(r2,text_color=rescolor)
-    modesg(mode)
+    window['-CT-'].Update(topico(ct),text_color=rescolor)
+    window['-RSC-'].Update(rto1000(rsc),text_color=rescolor)
+    window['-LMIN-'].Update(tomicro(lmin),text_color=rescolor)
+    window['-COUT-'].Update(tomicro(cout),text_color=rescolor)
+    window['-R1-'].Update(r1,text_color=rescolor)
+    window['-R2-'].Update(r2,text_color=rescolor)
+    window['-MODE-'].Update(mode)
     if rescolor==COLOR_ERR:
-        st('Error in data')
+        window['-SB-'].Update('Error in data')
     else:
-        st('Press <ENTER> or click on COMPUTE')
+        window['-SB-'].Update('Press <ENTER> or click on COMPUTE')
 
 def tomicro(l):
     '''convert to u(micro)'''
@@ -246,64 +249,41 @@ def is_float(v):
 mccompute(mode)
 
 # select theme
-sg.theme('SystemDefault')
+sg.theme(THEME)
 
 # read base64 encoded png images
 ImgStepDown= base64.b64decode(im.StepDown)
 ImgStepUp= base64.b64decode(im.StepUp)
 ImgInverting= base64.b64decode(im.Inverting)
 
-# create texts
-ctsg=  sg.Text('' ,text_color=rescolor,size=(15,1) )
-rscsg= sg.Text('' ,text_color=rescolor,size=(15,1) )
-coutsg=sg.Text('' ,text_color=rescolor,size=(15,1) )
-r1sg=  sg.Text('' ,text_color=rescolor,size=(15,1) )
-r2sg=  sg.Text('' ,text_color=rescolor,size=(15,1) )
-lminsg=  sg.Text('' ,text_color=rescolor,size=(15,1) )
-modesg=sg.Text('' )
-
-# create inputs
-vsatsg=   sg.InputText(str(vsat),size=(10,1) )
-vfsg=     sg.InputText(str(vf),size=(10,1) )
-vinsb=    sg.InputText(str(vin),size=(10,1) )
-voutsg=   sg.InputText(str(vout),size=(10,1) )
-ioutsg=   sg.InputText(str(iout),size=(10,1) )
-fminsg=   sg.InputText(str(fmin),size=(10,1) )
-vripplesg=sg.InputText(str(vripple),size=(10,1) )
-
-# create image
-imagesg=  sg.Image(ImgStepDown)
-st=sg.StatusBar('                                                      ')
-
 # lay out the window
 layout = \
 [
-   [sg.Text('Vsat_switch(V):',size=(12,1) ),vsatsg,  \
-    sg.Text('Ct(pF)=',size=(8,1) ),ctsg],
-   [sg.Text('VF_rectifier(V):',size=(12,1) ),vfsg, \
-    sg.Text('Rsc(Ohm)=',size=(8,1) ),rscsg],
-   [sg.Text('Vin(V):' ,size=(12,1)),vinsb, \
-    sg.Text('Lmin(uH)=',size=(8,1) ),lminsg],
-   [sg.Text('Vout(V):',size=(12,1) ),voutsg, \
-    sg.Text('Co(uF)=',size=(8,1) ),coutsg],
-   [sg.Text('Iout(A):',size=(12,1) ),ioutsg, \
-    sg.Text('R1(Ohm)=',size=(8,1) ),r1sg],
-   [sg.Text('fmin(Hz):',size=(12,1) ),fminsg, \
-    sg.Text('R2(Ohm)=',size=(8,1) ),r2sg],
-   [sg.Text('Vripple(V):',size=(12,1) ),vripplesg, \
-    sg.Button('Mode'), modesg],
+   [sg.Text('Vsat_switch(V):',size=(12,1)),sg.InputText(str(vsat),size=(10,1)), \
+    sg.Text('Ct(pF)=',size=(8,1)),sg.Text('',size=(15,1),key='-CT-')],
+   [sg.Text('VF_rectifier(V):',size=(12,1) ),sg.InputText(str(vf),size=(10,1) ), \
+    sg.Text('Rsc(Ohm)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-RSC-')],
+   [sg.Text('Vin(V):' ,size=(12,1)),sg.InputText(str(vin),size=(10,1)), \
+    sg.Text('Lmin(uH)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-LMIN-')],
+   [sg.Text('Vout(V):',size=(12,1) ),sg.InputText(str(vout),size=(10,1)), \
+    sg.Text('Co(uF)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-COUT-')],
+   [sg.Text('Iout(A):',size=(12,1) ),sg.InputText(str(iout),size=(10,1) ), \
+    sg.Text('R1(Ohm)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-R1-')],
+   [sg.Text('fmin(Hz):',size=(12,1) ),sg.InputText(str(fmin),size=(10,1) ), \
+    sg.Text('R2(Ohm)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-R2-')],
+   [sg.Text('Vripple(V):',size=(12,1) ),sg.InputText(str(vripple),size=(10,1)), \
+    sg.Button('Mode'), sg.Text('',key='-MODE-')],
 
    [sg.Button('Compute'),sg.Button('About'), sg.Button('Exit')],
-   [imagesg],
-   [st]
-
+   [sg.Image(ImgStepDown,key='-IMG-')],
+   [sg.StatusBar('                                                      ',key='-SB-')]
 ]
 
-# create the Window
-window = sg.Window(VERSION, layout,finalize=True,font=('Ubuntu',10))
-
+# create the Window and bind keys
+window = sg.Window(VERSION, layout,finalize=True,font=(MFONT,MSIZE))
 window.bind("<Return>", "_Enter")
 window.bind('<Escape>','_Escape')
+
 # display computed values
 mcdisplay()
 
@@ -316,15 +296,15 @@ while True:
     elif event=='Mode':
         if mode=='Inverting':
             mode='StepDown'
-            imagesg(ImgStepDown)
+            window['-IMG-'].Update(ImgStepDown)
         elif mode=='StepDown':
             mode='StepUp'
-            imagesg(ImgStepUp)
+            window['-IMG-'].Update(ImgStepUp)
         else:
             mode='Inverting'
-            imagesg(ImgInverting)
+            window['-IMG-'].Update(ImgInverting)
     elif event=='About':
-        sg.popup(VERSION+'\n'+VERSION1+'\n'+GNU3, title='MC34063',font=('Ubuntu',10))
+        sg.popup(VERSION+'\n'+VERSION1+'\n'+GNU3, title='MC34063',font=(PFONT,PSIZE))
 
     # test for floating point inputs
     fl=[]
