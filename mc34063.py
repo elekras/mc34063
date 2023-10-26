@@ -14,29 +14,28 @@ Uses python3 and PySimpleGui
 (c) Fabio Sturman fabio.sturman@gmail.com - 2023
 This program is covered by
 GNU General Public License, version 3
-
 '''
 import datetime
 import base64
 import PySimpleGUI as sg
 import mc34063img as im
 
+VERSION= 'MC34063  Calculator - by Fabio Sturman - Ver 0.9'
+VERSION1='(c) Fabio Sturman fabio.sturman@gmail.com - 2023'
+GNU3=    'GNU General Public License, version 3'
+
 E24=[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,
      3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1,10.0]
 E12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10.0]
 E6=[1.0,1.5,2.2,3.3,4.7,6.8,10.0]
 
-VERSION= 'MC34063  Calculator - by Fabio Sturman - Ver 0.8'
-VERSION1='(c) Fabio Sturman fabio.sturman@gmail.com - 2023'
-GNU3=    'GNU General Public License, version 3'
-
-# text color
+# text color, fonts, font size...
 COLOR_OK='#000000'
 COLOR_ERR='#ff0000'
 MFONT='Ubuntu'
 PFONT='Ubuntu'
-MSIZE=14
-PSIZE=14
+MSIZE=10
+PSIZE=10
 THEME='SystemDefault'
 
 # default values for in parameters
@@ -133,7 +132,8 @@ def printc():
     ''' print all data on standard output'''
     print('================================================')
     print(VERSION)
-    print(datetime.datetime.now())
+    s=str(datetime.datetime.now())
+    print(s[0:19])
     print('Mode=',mode)
     print('------------------------------------------------')
     print('Vin=',vin,'V')
@@ -158,7 +158,8 @@ def printc():
 def mccompute(mode):
     '''compute r1, r2, cout, lmin, rsc, ipk, ct, ton, toff'''
     global r1, r2, cout, lmin, rsc, ct, ton, toff
-    if iout<=0 or vripple<=0 or fmin <24000 or fmin>42000 or vsat<=0 or vf<=0:
+    if iout<=0 or vripple<=0 or fmin <24000 or fmin>42000 or vsat<=0 or \
+       vf<=0 or vin>40 or vin<3:
         return False
     if mode=='Inverting':
         if vout>=0 or vin<=0 :
@@ -215,7 +216,7 @@ def mcdisplay():
     window['-R2-'].Update(r2,text_color=rescolor)
     window['-MODE-'].Update(mode)
     if rescolor==COLOR_ERR:
-        window['-SB-'].Update('Error in data')
+        window['-SB-'].Update('Error in input data')
     else:
         window['-SB-'].Update('Press <ENTER> or click on COMPUTE')
 
@@ -259,22 +260,22 @@ ImgInverting= base64.b64decode(im.Inverting)
 # lay out the window
 layout = \
 [
-   [sg.Text('Vsat_switch(V):',size=(12,1)),sg.InputText(str(vsat),size=(10,1)), \
-    sg.Text('Ct(pF)=',size=(8,1)),sg.Text('',size=(15,1),key='-CT-')],
-   [sg.Text('VF_rectifier(V):',size=(12,1) ),sg.InputText(str(vf),size=(10,1) ), \
-    sg.Text('Rsc(Ohm)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-RSC-')],
-   [sg.Text('Vin(V):' ,size=(12,1)),sg.InputText(str(vin),size=(10,1)), \
-    sg.Text('Lmin(uH)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-LMIN-')],
-   [sg.Text('Vout(V):',size=(12,1) ),sg.InputText(str(vout),size=(10,1)), \
-    sg.Text('Co(uF)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-COUT-')],
-   [sg.Text('Iout(A):',size=(12,1) ),sg.InputText(str(iout),size=(10,1) ), \
-    sg.Text('R1(Ohm)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-R1-')],
-   [sg.Text('fmin(Hz):',size=(12,1) ),sg.InputText(str(fmin),size=(10,1) ), \
-    sg.Text('R2(Ohm)=',size=(8,1) ),sg.Text('' ,text_color=rescolor,size=(15,1),key='-R2-')],
-   [sg.Text('Vripple(V):',size=(12,1) ),sg.InputText(str(vripple),size=(10,1)), \
-    sg.Button('Mode'), sg.Text('',key='-MODE-')],
+   [sg.T('Vsat_switch(V):',size=(12,1)),sg.I(str(vsat),size=(10,1)), \
+    sg.T('Ct(pF)=',size=(8,1)),sg.T('',size=(15,1),key='-CT-')],
+   [sg.T('VF_rectifier(V):',size=(12,1) ),sg.I(str(vf),size=(10,1) ), \
+    sg.T('Rsc(Ohm)=',size=(8,1) ),sg.T('' ,text_color=rescolor,size=(15,1),key='-RSC-')],
+   [sg.T('Vin(V):' ,size=(12,1)),sg.I(str(vin),size=(10,1)), \
+    sg.T('Lmin(uH)=',size=(8,1) ),sg.T('' ,text_color=rescolor,size=(15,1),key='-LMIN-')],
+   [sg.T('Vout(V):',size=(12,1) ),sg.I(str(vout),size=(10,1)), \
+    sg.T('Co(uF)=',size=(8,1) ),sg.T('' ,text_color=rescolor,size=(15,1),key='-COUT-')],
+   [sg.T('Iout(A):',size=(12,1) ),sg.I(str(iout),size=(10,1) ), \
+    sg.T('R1(Ohm)=',size=(8,1) ),sg.T('' ,text_color=rescolor,size=(15,1),key='-R1-')],
+   [sg.T('fmin(Hz):',size=(12,1) ),sg.I(str(fmin),size=(10,1) ), \
+    sg.T('R2(Ohm)=',size=(8,1) ),sg.T('' ,text_color=rescolor,size=(15,1),key='-R2-')],
+   [sg.T('Vripple(V):',size=(12,1) ),sg.I(str(vripple),size=(10,1)), \
+    sg.B('Mode'), sg.T('',key='-MODE-')],
 
-   [sg.Button('Compute'),sg.Button('About'), sg.Button('Exit')],
+   [sg.B('Compute'),sg.B('About'), sg.B('Exit')],
    [sg.Image(ImgStepDown,key='-IMG-')],
    [sg.StatusBar('                                                      ',key='-SB-')]
 ]

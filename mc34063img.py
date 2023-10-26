@@ -1623,5 +1623,31 @@ EXc0KAhbt2zJ+Lufpyd69e7NwBARFbIF8+bj1s0bAACRSIQFixahatWqDAwTiuKhcZMmkMlMM/6u\
 Xac2g0JE9BH09/REfHz824QCqFK5MoPyDvahICIiog/GPhRERETEhIKIiIiYUBARERETCiIiIiIm\
 FERERMSEgoiIiJhQEBERERMKIiIiIgD4f0dHWShNZtcIAAAAAElFTkSuQmCC'
 
+if __name__ == "__main__":
+    '''Display images base64 StepDown, StepUp and Inverting'''
+    import base64
+    import PySimpleGUI as sg
+    sg.theme('SystemDefault')
+    ImgStepDown= base64.b64decode(StepDown)
+    ImgStepUp= base64.b64decode(StepUp)
+    ImgInverting= base64.b64decode(Inverting)
+    layout=[
+        [sg.Button('StepUp'),sg.Button('StepDown'),sg.Button('Invert'),sg.Button('Exit')],
+        [sg.Image(ImgStepUp,key='-IMG-')]
+        ]
+    window = sg.Window('Display images base64 StepDown, StepUp and Inverting',layout,finalize=True,font=('Ubuntu','10'))
+    window.bind('<Escape>','Escape')
+    while True:
+        event, values = window.read()
+        if event == sg.WIN_CLOSED or event == 'Exit' or event=='Escape':
+            break
+        elif event=='StepUp':
+            window['-IMG-'].Update(ImgStepUp)
+        elif event=='StepDown':
+            window['-IMG-'].Update(ImgStepDown)
+        else:
+            window['-IMG-'].Update(ImgInverting)
+    window.close()
+
 
 
